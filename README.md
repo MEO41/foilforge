@@ -27,7 +27,9 @@ ForgeFoil is a modern web application designed for aerodynamic engineers and res
 2. Install dependencies: `npm install`
 3. Run the development server: `npm run dev`
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
-
+5. For backend run pip instal -r ./backend/requirements.txt
+6. Then python run.py
+Not: It's advice to setup a virtual environment
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
 
