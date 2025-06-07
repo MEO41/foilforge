@@ -11,16 +11,27 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, Settings } from "lucide-react"
-import type { TargetProperties, PropertyWeights, SimilarityResult, OptimizationConfig } from "../types/airfoil"
+import { BarChart3, Settings, Sparkles, Cpu } from "lucide-react"
+import type {
+  TargetProperties,
+  PropertyWeights,
+  SimilarityResult,
+  OptimizationConfig,
+  AIGenerationConfig,
+  AIGenerationResult,
+} from "../types/airfoil"
 
 interface SidebarContentProps {
   onSearch: (targets: TargetProperties, weights: PropertyWeights) => void
   onOptimize: (airfoil: SimilarityResult, config: OptimizationConfig) => void
   onPlotAirfoil: (airfoil: SimilarityResult) => void
+  onGenerateAI: (targets: TargetProperties, config: AIGenerationConfig) => void
   similarityResults: SimilarityResult[]
+  aiGenerationResult?: AIGenerationResult
   isSearching?: boolean
   isOptimizing?: boolean  
+  isGenerating?: boolean
+  generationStatus?: string
 }
 
 // Preset configurations for different airfoil types
@@ -37,7 +48,7 @@ const PRESET_CONFIGS = {
       cl_cd_ratio: 66.7,
     },
     weights: {
-      reynolds_number: 0.8,
+      reynolds_number: 0,
       angle_of_attack: 0.9,
       cl: 1.0,
       cd: 1.0,
@@ -57,7 +68,7 @@ const PRESET_CONFIGS = {
       cl_cd_ratio: 80.0,
     },
     weights: {
-      reynolds_number: 0.7,
+      reynolds_number: 0,
       angle_of_attack: 0.8,
       cl: 1.2,
       cd: 0.9,
@@ -77,7 +88,7 @@ const PRESET_CONFIGS = {
       cl_cd_ratio: 75.0,
     },
     weights: {
-      reynolds_number: 0.9,
+      reynolds_number: 0,
       angle_of_attack: 0.7,
       cl: 0.8,
       cd: 1.2,
@@ -97,7 +108,7 @@ const PRESET_CONFIGS = {
       cl_cd_ratio: 90.0,
     },
     weights: {
-      reynolds_number: 0.8,
+      reynolds_number: 0,
       angle_of_attack: 0.8,
       cl: 1.0,
       cd: 1.0,
@@ -117,9 +128,13 @@ export function SidebarContent({
   onSearch,
   onOptimize,
   onPlotAirfoil,
+  onGenerateAI,
+  aiGenerationResult,
   similarityResults,
   isSearching,
   isOptimizing,
+  isGenerating,
+  generationStatus,
 }: SidebarContentProps) {
   const [selectedPreset, setSelectedPreset] = useState<keyof typeof PRESET_CONFIGS>("default")
   const [targets, setTargets] = useState<TargetProperties>(PRESET_CONFIGS.default.targets)
@@ -133,6 +148,31 @@ export function SidebarContent({
     setRawWeights(PRESET_CONFIGS[preset].weights)
   }
 
+  const [aiTargets, setAiTargets] = useState<TargetProperties>({
+    reynolds_number: 1000000,
+    angle_of_attack: 5.0,
+    cl: 0.8,
+    cd: 0.012,
+    cm: -0.05,
+    cl_cd_ratio: 66.7,
+  })
+
+  
+  const [aiConfig, setAiConfig] = useState<AIGenerationConfig>({
+    method: "gan",
+    creativity_level: 0.7,
+    constraint_weight: 0.8,
+    seed: undefined,
+  })
+
+  
+  const handleAiTargetChange = (property: keyof TargetProperties, value: number) => {
+    setAiTargets((prev) => ({ ...prev, [property]: value }))
+  }
+
+  const handleGenerateAI = () => {
+    onGenerateAI(aiTargets, aiConfig)
+  }
   // Normalize weights to sum to 1
   const normalizedWeights = useMemo(() => {
     const sum = Object.values(rawWeights).reduce((acc, val) => acc + val, 0)
@@ -162,8 +202,6 @@ export function SidebarContent({
 
   const handleWeightChange = (property: keyof PropertyWeights, value: number[]) => {
     setRawWeights((prev) => ({ ...prev, [property]: value[0] }))
-    // Reset to custom preset when manually changing values
-    setSelectedPreset("default")
   }
 
   const handleSearch = async () => {
@@ -214,10 +252,11 @@ export function SidebarContent({
   return (
     <div className="space-y-4">
       <Tabs defaultValue="targets" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="targets">Targets</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
           <TabsTrigger value="optimize">Optimize</TabsTrigger>
+          <TabsTrigger value="ai">AI</TabsTrigger>
         </TabsList>
 
         <TabsContent value="targets" className="space-y-0.5">
@@ -569,6 +608,225 @@ export function SidebarContent({
                   <Badge variant="outline">{selectedAirfoil.airfoil.airfoil_name}</Badge>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="ai" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Generation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* AI Target Properties */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Target Properties</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="ai-reynolds" className="text-sm">
+                      Reynolds Number
+                    </Label>
+                    <Input
+                      id="ai-reynolds"
+                      type="number"
+                      value={aiTargets.reynolds_number}
+                      onChange={(e) => handleAiTargetChange("reynolds_number", Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ai-aoa" className="text-sm">
+                      Angle of Attack (°)
+                    </Label>
+                    <Input
+                      id="ai-aoa"
+                      type="number"
+                      step="0.1"
+                      value={aiTargets.angle_of_attack}
+                      onChange={(e) => handleAiTargetChange("angle_of_attack", Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="ai-cl" className="text-sm">
+                      Cl
+                    </Label>
+                    <Input
+                      id="ai-cl"
+                      type="number"
+                      step="0.01"
+                      value={aiTargets.cl}
+                      onChange={(e) => handleAiTargetChange("cl", Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ai-cd" className="text-sm">
+                      Cd
+                    </Label>
+                    <Input
+                      id="ai-cd"
+                      type="number"
+                      step="0.001"
+                      value={aiTargets.cd}
+                      onChange={(e) => handleAiTargetChange("cd", Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="ai-cm" className="text-sm">
+                      Cm
+                    </Label>
+                    <Input
+                      id="ai-cm"
+                      type="number"
+                      step="0.01"
+                      value={aiTargets.cm}
+                      onChange={(e) => handleAiTargetChange("cm", Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ai-cl-cd" className="text-sm">
+                      Cl/Cd
+                    </Label>
+                    <Input
+                      id="ai-cl-cd"
+                      type="number"
+                      step="0.1"
+                      value={aiTargets.cl_cd_ratio}
+                      onChange={(e) => handleAiTargetChange("cl_cd_ratio", Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* AI Configuration */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">AI Configuration</h4>
+
+                <div>
+                  <Label htmlFor="ai-method" className="text-sm">
+                    Generation Method
+                  </Label>
+                  <Select
+                    value={aiConfig.method}
+                    onValueChange={(value) => setAiConfig((prev) => ({ ...prev, method: value as any }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gan">Generative Adversarial Network</SelectItem>
+                      <SelectItem value="vae">Variational Autoencoder</SelectItem>
+                      <SelectItem value="diffusion">Diffusion Model</SelectItem>
+                      <SelectItem value="transformer">Transformer Architecture</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm">Creativity Level</Label>
+                    <span className="text-xs text-gray-500 font-mono">{aiConfig.creativity_level.toFixed(1)}</span>
+                  </div>
+                  <Slider
+                    value={[aiConfig.creativity_level]}
+                    onValueChange={(value) => setAiConfig((prev) => ({ ...prev, creativity_level: value[0] }))}
+                    max={1}
+                    min={0}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Conservative</span>
+                    <span>Innovative</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm">Constraint Weight</Label>
+                    <span className="text-xs text-gray-500 font-mono">{aiConfig.constraint_weight.toFixed(1)}</span>
+                  </div>
+                  <Slider
+                    value={[aiConfig.constraint_weight]}
+                    onValueChange={(value) => setAiConfig((prev) => ({ ...prev, constraint_weight: value[0] }))}
+                    max={1}
+                    min={0}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Flexible</span>
+                    <span>Strict</span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="ai-seed" className="text-sm">
+                    Random Seed (Optional)
+                  </Label>
+                  <Input
+                    id="ai-seed"
+                    type="number"
+                    placeholder="Leave empty for random"
+                    value={aiConfig.seed || ""}
+                    onChange={(e) =>
+                      setAiConfig((prev) => ({
+                        ...prev,
+                        seed: e.target.value ? Number(e.target.value) : undefined,
+                      }))
+                    }
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* Generation Status */}
+              {isGenerating && (
+                <div className="space-y-3 p-3 bg-blue-50 rounded-lg border">
+                  <div className="flex items-center space-x-2">
+                    <Cpu className="h-4 w-4 text-blue-600 animate-spin" />
+                    <span className="text-sm font-medium text-blue-800">AI Generation in Progress</span>
+                  </div>
+                  <div className="text-sm text-blue-700">{generationStatus}</div>
+                  <Progress value={undefined} className="w-full" />
+                </div>
+              )}
+
+              {/* Generated Result */}
+              {aiGenerationResult && (
+                <div className="space-y-2 p-3 bg-green-50 rounded-lg border">
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">Generation Complete</span>
+                  </div>
+                  <div className="text-sm text-green-700">
+                    Generated: {aiGenerationResult.generated_airfoil.airfoil_name}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>Confidence: {(aiGenerationResult.generation_metadata.confidence_score * 100).toFixed(1)}%</div>
+                    <div>Novelty: {(aiGenerationResult.generation_metadata.design_novelty * 100).toFixed(1)}%</div>
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={handleGenerateAI} className="w-full" disabled={isGenerating}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isGenerating ? "Generating..." : "Generate Airfoil"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

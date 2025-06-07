@@ -49,10 +49,16 @@ export interface OptimizationResult {
     thickness: number
     camber: number
   }
-  optimization_history: {
-    iterations: number
-    best_fitness: number
-  }
+  optimization_history: Array<{
+    iteration: number
+    fitness: number
+  }>
+  improvement_metrics: Array<{
+    property: string
+    original: number
+    optimized: number
+    improvement_percent: number
+  }>
 }
 
 export interface OptimizationConfig {
@@ -62,4 +68,22 @@ export interface OptimizationConfig {
   convergence_tolerance: number
   mutation_rate: number
   crossover_rate: number
+}
+
+export interface AIGenerationConfig {
+  method: "gan" | "vae" | "diffusion" | "transformer"
+  creativity_level: number // 0-1 scale
+  constraint_weight: number // 0-1 scale
+  seed?: number
+}
+
+export interface AIGenerationResult {
+  generated_airfoil: AirfoilData
+  generation_metadata: {
+    method_used: string
+    generation_time: number
+    confidence_score: number
+    design_novelty: number
+  }
+  predicted_performance: TargetProperties
 }

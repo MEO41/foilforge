@@ -12,14 +12,19 @@ import type {
   OptimizationResult,
   OptimizationConfig,
   AirfoilData,
+  AIGenerationConfig,
+  AIGenerationResult,
 } from "./types/airfoil"
 
 const API_BASE_URL = "http://localhost:5000" // Flask default port
 
 export default function AirfoilDashboard() {
-  const [plotMode, setPlotMode] = useState<"preview" | "optimization">("preview")
   const [isSearching, setIsSearching] = useState(false)
   const [isOptimizing, setIsOptimizing] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationStatus, setGenerationStatus] = useState<string>("")
+  const [aiGenerationResult, setAiGenerationResult] = useState<AIGenerationResult | null>(null)
+  const [plotMode, setPlotMode] = useState<"preview" | "optimization" | "ai_generation">("preview")
   const [similarityResults, setSimilarityResults] = useState<SimilarityResult[]>(() => {
     // Load saved results from localStorage on component mount
     if (typeof window !== 'undefined') {
@@ -40,6 +45,7 @@ export default function AirfoilDashboard() {
     setIsSearching(true)
     setOptimizationResult(undefined)
     setSelectedAirfoil(null)
+    setAiGenerationResult(null)
     setPlotMode("preview")
 
     try {
@@ -123,6 +129,7 @@ export default function AirfoilDashboard() {
   const handlePlotAirfoil = (airfoil: SimilarityResult) => {
     setSelectedAirfoil(airfoil)
     setOptimizationResult(undefined)
+    setAiGenerationResult(null)
     setPlotMode("preview")
   }
 
@@ -130,6 +137,7 @@ export default function AirfoilDashboard() {
     setSelectedAirfoil(airfoil)
     setIsOptimizing(true)
     setOptimizationResult(undefined)
+    setAiGenerationResult(null)
     setPlotMode("optimization")
     try {
       const response = await fetch(`${API_BASE_URL}/api/optimize`, {
@@ -169,14 +177,14 @@ export default function AirfoilDashboard() {
       setOptimizationProgress(undefined)
     }
   }
-
+  
   const handleExportResults = () => {
-    if (!optimizationResult) return
+    const airfoilToExport = aiGenerationResult?.generated_airfoil || optimizationResult?.optimized_airfoil
+    if (!airfoilToExport) return
 
     // Generate .dat file
-    const { optimized_airfoil } = optimizationResult
-    let datContent = `${optimized_airfoil.airfoil_name}\n`
-    optimized_airfoil.geometry.forEach((point) => {
+    let datContent = `${airfoilToExport.airfoil_name}\n`
+    airfoilToExport.geometry.forEach((point) => {
       datContent += `${point[0].toFixed(6)} ${point[1].toFixed(6)}\n`
     })
 
@@ -184,27 +192,93 @@ export default function AirfoilDashboard() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${optimized_airfoil.airfoil_name.replace(/\s+/g, "_")}.dat`
+    a.download = `${airfoilToExport.airfoil_name.replace(/\s+/g, "_")}.dat`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
 
+  const handleAIGeneration = async (targets: TargetProperties, config: AIGenerationConfig) => {
+    setIsGenerating(true)
+    setOptimizationResult(undefined)
+    setSelectedAirfoil(null)
+    setAiGenerationResult(null)
+    setPlotMode("ai_generation")
+
+    // Simulate realistic AI generation status updates
+    const statusMessages = [
+      "Initializing neural networks...",
+      "Loading pre-trained models...",
+      "Encoding design parameters...",
+      "Sampling latent space...",
+      "Running generative model...",
+      "Optimizing geometry constraints...",
+      "Evaluating aerodynamic feasibility...",
+      "Refining airfoil shape...",
+      "Decoding final geometry...",
+      "Validating performance predictions...",
+      "Finalizing design...",
+    ]
+
+    let messageIndex = 0
+    const statusInterval = setInterval(() => {
+      if (messageIndex < statusMessages.length) {
+        setGenerationStatus(statusMessages[messageIndex])
+        messageIndex++
+      } else {
+        clearInterval(statusInterval)
+      }
+    }, 350)
+
+    try {
+      const response = await fetch("/api/ai-generated", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ targets, config }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error)
+      }
+      setAiGenerationResult(data.result)
+    } catch (error) {
+      console.error("AI generation failed:", error)
+    } finally {
+      setIsGenerating(false)
+      setGenerationStatus("")
+      clearInterval(statusInterval)
+    }
+  }
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader onExportResults={handleExportResults} hasResults={!!optimizationResult} />
-
+      <DashboardHeader
+        onExportResults={handleExportResults}
+        hasResults={!!(optimizationResult || aiGenerationResult)}
+      />
       <div className="flex h-[calc(100vh-73px)]">
         {/* Left Sidebar */}
         <div className="w-80 bg-white border-r p-4 overflow-y-auto">
-          <SidebarContent
+        <SidebarContent
             onSearch={handleSimilaritySearch}
             onOptimize={handleOptimization}
-            similarityResults={similarityResults}
             onPlotAirfoil={handlePlotAirfoil}
+            onGenerateAI={handleAIGeneration}
+            similarityResults={similarityResults}
+            aiGenerationResult={aiGenerationResult ?? undefined}
             isSearching={isSearching}
             isOptimizing={isOptimizing}
+            isGenerating={isGenerating}
+            generationStatus={generationStatus}
           />
         </div>
 
@@ -216,7 +290,8 @@ export default function AirfoilDashboard() {
             isOptimizing={isOptimizing}
             optimizationProgress={optimizationProgress}
             plotMode={plotMode}
-
+            aiGenerationResult={aiGenerationResult ?? undefined}
+            isGenerating={isGenerating}
           />
         </div>
       </div>

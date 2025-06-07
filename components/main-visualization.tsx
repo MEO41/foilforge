@@ -2,20 +2,22 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BarChart3 } from "lucide-react"
-import type { AirfoilData, OptimizationResult, SimilarityResult } from "../types/airfoil"
+import { BarChart3, Sparkles } from "lucide-react"
+import type { AirfoilData, OptimizationResult, SimilarityResult,AIGenerationResult } from "../types/airfoil"
 import { ResultsProgressPanel } from "./results-progress-panel"
 
 interface MainVisualizationProps {
   selectedAirfoil?: SimilarityResult
   optimizationResult?: OptimizationResult
+  aiGenerationResult?: AIGenerationResult
   isOptimizing?: boolean
+  isGenerating?: boolean
   optimizationProgress?: {
     currentIteration: number
     maxIterations: number
     bestFitness: number
   }
-  plotMode?: "preview" | "optimization"
+  plotMode?: "preview" | "optimization" | "ai_generation"
 }
 
 export function MainVisualization({
@@ -23,13 +25,14 @@ export function MainVisualization({
   optimizationResult,
   isOptimizing,
   optimizationProgress,
+  aiGenerationResult,
+  isGenerating,
   plotMode = "preview",
 }: MainVisualizationProps) {
   const renderAirfoilGeometry = (airfoil: AirfoilData, color: string, strokeDasharray?: string) => {
-    console.log("Checking airfoil geometry")
-    console.log(airfoil)
     if (!airfoil.geometry || airfoil.geometry.length === 0) return null
-    console.log("airfoil geometry rendering...")
+
+
     const plotWidth = 600
     const plotHeight = 300
     const margin = { top: 20, right: 20, bottom: 40, left: 60 }
@@ -108,17 +111,26 @@ export function MainVisualization({
   const getVisualizationTitle = () => {
     if (optimizationResult) {
       return "Airfoil Optimization Comparison"
-    } else if (selectedAirfoil && plotMode === "preview") {
+    } else if (aiGenerationResult) {
+      return `AI Generated Airfoil: ${aiGenerationResult.generated_airfoil.airfoil_name}`
+    }else if (selectedAirfoil && plotMode === "preview") {
       return `Airfoil Preview: ${selectedAirfoil.airfoil.airfoil_name}`
     } else if (selectedAirfoil) {
       return "Selected Airfoil Profile"
     }
     return "Airfoil Profile"
   }
+  
+  const getCurrentAirfoil = () => {
+    if (aiGenerationResult) return aiGenerationResult.generated_airfoil
+    if (selectedAirfoil) return selectedAirfoil.airfoil
+    return null
+  }
+
   return (
     <div className="space-y-4">
       {/* Airfoil Visualization */}
-      <Card className="h-[400px]">
+      <Card className="h-[500px]">
         <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
             <CardTitle className="text-lg font-medium">{getVisualizationTitle()}</CardTitle>
@@ -127,9 +139,16 @@ export function MainVisualization({
                 Preview Mode
               </Badge>
             )}
-          </div>        </CardHeader>
+                        {plotMode === "ai_generation" && aiGenerationResult && (
+              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                <Sparkles className="h-3 w-3 mr-1" />
+                AI Generated
+              </Badge>
+            )}
+          </div>    
+              </CardHeader>
         <CardContent className="h-full">
-          {selectedAirfoil || optimizationResult ? (
+          {selectedAirfoil || getCurrentAirfoil() || optimizationResult ? (
             <div className="space-y-4">
               <div className="w-full overflow-x-auto">
                 {optimizationResult && selectedAirfoil ? (
@@ -155,60 +174,19 @@ export function MainVisualization({
                       }, "#dc2626")}
                     </div>
                   </div>
-                ) : selectedAirfoil ? (
-                  renderAirfoilGeometry(selectedAirfoil.airfoil, "#2563eb")
+                ) : getCurrentAirfoil() ? (
+                  renderAirfoilGeometry(getCurrentAirfoil()!, aiGenerationResult ? "#8b5cf6" : "#2563eb")
                 ) : null}
-              </div>
-
-              {/* Legend and Info */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {optimizationResult && selectedAirfoil && (
-                  <>
-                    <div>
-                      <h4 className="font-medium text-blue-600 mb-1">
-                        Original: {selectedAirfoil.airfoil.airfoil_name}
-                      </h4>
-                      <div className="space-y-1 text-gray-600">
-                        <div>Cl: {selectedAirfoil.airfoil.cl.toFixed(6)}</div>
-                        <div>Cd: {selectedAirfoil.airfoil.cd.toFixed(6)}</div>
-                        <div>Cm: {selectedAirfoil.airfoil.cm.toFixed(6)}</div>
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-red-600 mb-1">
-                        Optimized: {optimizationResult.optimized_airfoil.airfoil_name}
-                      </h4>
-                      <div className="space-y-1 text-gray-600">
-                        <div>Cl: {optimizationResult.optimized_airfoil.cl.toFixed(6)}</div>
-                        <div>Cd: {optimizationResult.optimized_airfoil.cd.toFixed(6)}</div>
-                        <div>Cm: {optimizationResult.optimized_airfoil.cm.toFixed(6)}</div>
-                      </div>
-                    </div>
-                  </>
-                )}
-                {selectedAirfoil && !optimizationResult && (
-                  <div>
-                    <h4 className="font-medium text-blue-600 mb-1">{selectedAirfoil.airfoil.airfoil_name}</h4>
-                    <div className="space-y-1 text-gray-600">
-                      <div>Cl: {selectedAirfoil.airfoil.cl.toFixed(6)}</div>
-                      <div>Cd: {selectedAirfoil.airfoil.cd.toFixed(6)}</div>
-                      <div>Cm: {selectedAirfoil.airfoil.cm.toFixed(6)}</div>
-                      <div>Re: {selectedAirfoil.airfoil.reynolds_number.toLocaleString()}</div>
-                      <div>α: {selectedAirfoil.airfoil.angle_of_attack.toFixed(1)}°</div>
-                      <div>L/D: {selectedAirfoil.airfoil.cl_cd_ratio.toFixed(1)}</div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-              <p>Select an airfoil to view its geometry</p>
-              <p className="text-sm mt-1">Use the "Plot" button in the Results tab</p>
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p>Select an airfoil to view its geometry</p>
+                <p className="text-sm mt-1">Use "Plot" button or "Generate" with AI</p>
+              </div>
             </div>
-          </div>
           )}
         </CardContent>  
       </Card>
@@ -217,7 +195,9 @@ export function MainVisualization({
       <ResultsProgressPanel
         selectedAirfoil={selectedAirfoil}
         optimizationResult={optimizationResult}
+        aiGenerationResult={aiGenerationResult}
         isOptimizing={isOptimizing}
+        isGenerating={isGenerating}
         optimizationProgress={optimizationProgress}
       />
     </div>

@@ -46,7 +46,7 @@ def similarity_score(dists: np.ndarray,
                      weights: np.ndarray) -> np.ndarray:
     #max_d = dists.max()
     alpha = auto_alpha(dists)  # This gives a good starting alpha
-    k = 1000 # this K value is for offsetting our alpha to get more interpretibale similarity score
+    k = 200 # this K value is for offsetting our alpha to get more interpretibale similarity score
     sim = np.exp(-alpha * k * dists) #The parameter alpha controls how fast similarity decays in this case the value 5 manually givnev
     return (100 * sim).clip(min=0)
 
