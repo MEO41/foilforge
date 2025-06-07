@@ -1,5 +1,5 @@
 # ForgeFoil - Airfoil Optimization Platform
-
+![ForgeFoil Screenshot](./image.png)
 
 ## Overview
 ForgeFoil is a modern web application designed for aerodynamic engineers and researchers to analyze, optimize, and compare airfoil profiles. The platform provides an intuitive interface for visualizing airfoil geometries and their aerodynamic performance characteristics.
