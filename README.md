@@ -1,37 +1,84 @@
-# ForgeFoil - Airfoil Optimization Platform
-![ForgeFoil Screenshot](https://github.com/MEO41/foilforge/blob/main/image.png?raw=true)
+<!-- ===========================  ForgeFoil README  =========================== -->
+
+<h1 align="center">ForgeFoil &mdash; Airfoil Optimization Platform</h1>
+
+<p align="center">
+  <a href="https://github.com/MEO41/foilforge/actions/workflows/ci.yml">
+    <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/MEO41/foilforge/ci.yml?label=build">
+  </a>
+  <a href="https://github.com/MEO41/foilforge/issues">
+    <img alt="Open Issues" src="https://img.shields.io/github/issues/MEO41/foilforge">
+  </a>
+  <a href="./LICENSE">
+    <img alt="License" src="https://img.shields.io/github/license/MEO41/foilforge">
+  </a>
+</p>
+<p align="center">
+  <img src="https://github.com/MEO41/foilforge/raw/main/image.png" alt="ForgeFoil Screenshot" width="640">
+</p>
+
+
+---
+
+## Table&nbsp;of&nbsp;Contents
+1. [Overview](#overview)  
+2. [Key Features](#key-features)  
+3. [Architecture & Tech Stack](#architecture--tech-stack)  
+4. [Quick Start](#quick-start)  
+5. [Contributing](#contributing)  
+6. [License](#license)  
+7. [Additional Resources](#additional-resources)  
+
+---
 
 ## Overview
-ForgeFoil is a modern web application designed for aerodynamic engineers and researchers to analyze, optimize, and compare airfoil profiles. The platform provides an intuitive interface for visualizing airfoil geometries and their aerodynamic performance characteristics.
+**ForgeFoil** is a web-based platform for aerodynamicists to **visualize, analyze and optimize airfoil geometries**. It combines an intuitive UI with powerful numerical tooling, enabling rapid design iterations and comparison of performance metrics.
+
+---
 
 ## Key Features
-- **Interactive Airfoil Visualization**: Real-time rendering of airfoil profiles with detailed coordinate visualization
-- **Performance Analysis**: Comprehensive analysis of key aerodynamic parameters:
-  - Lift Coefficient (Cl)
-  - Drag Coefficient (Cd)
-  - Moment Coefficient (Cm)
-  - Lift-to-Drag Ratio (L/D)
-- **Optimization Tools**: Advanced optimization capabilities to improve airfoil performance
-- **Progress Tracking**: Real-time monitoring of optimization progress with detailed metrics
-- **Modern UI**: Clean and responsive interface built with React and Tailwind CSS
+| Category | Description |
+|----------|-------------|
+| Interactive Visualization | Real-time SVG rendering of airfoil profiles with coordinate inspection |
+| Performance Analytics | Instant computation of Cl, Cd, Cm and L/D across the operating envelope |
+| Optimization Engine | Automated parameter sweeps and gradient-based optimizations with live progress feedback |
+| Project Tracking | Save, load and compare multiple design studies in a single workspace |
+| Modern UI | Responsive React/Next.js front-end styled with Tailwind CSS |
 
-## Technical Stack
-- Frontend: React with TypeScript
-- UI Components: Custom components with Tailwind CSS
-- Visualization: SVG-based rendering for precise airfoil geometry display
-- State Management: React hooks for efficient data handling
+---
+## Architecture & Tech Stack
+| Layer | Technology |
+|-------|------------|
+| **Front-end** | Next.js (React + TypeScript), Tailwind CSS |
+| **Visualization** | Native SVG + D3 utilities |
+| **State-Management** | React hooks & Context API |
+| **Back-end** | Python / FastAPI (REST) |
+| **Numerics** | NumPy, SciPy, XFoil wrappers |
+| **CI/CD** | GitHub Actions & Vercel deployment |
 
-## Getting Started
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Run the development server: `npm run dev`
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
-5. For backend run pip instal -r ./backend/requirements.txt
-6. Then python run.py
-Not: It's advice to setup a virtual environment
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
+## Quick Start
+
+### Prerequisites
+* **Node.js ≥ 18** and **npm**  
+* **Python ≥ 3.9** (recommend using a virtual environment)
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/MEO41/foilforge.git
+cd foilforge
+#front end setup
+npm install          # install JS/TS dependencies
+npm run dev          # start Next.js dev server
+# → visit http://localhost:3000
+#backend setup
+python -m venv .venv && source .venv/bin/activate  # optional but recommended
+pip install -r backend/requirements.txt
+python backend/run.py
+# → default API endpoint: http://localhost:8000
+
+```
 ## License
 [Your chosen license]
 
