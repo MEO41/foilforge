@@ -9,8 +9,8 @@
   <a href="https://github.com/MEO41/foilforge/issues">
     <img alt="Open Issues" src="https://img.shields.io/github/issues/MEO41/foilforge">
   </a>
-  <a href="./LICENSE">
-    <img alt="License" src="https://img.shields.io/github/license/MEO41/foilforge">
+  <a href="./LICENSE.md">
+    <img alt="License" src="https://img.shields.io/badge/License-MIT-yellow.svg">
   </a>
 </p>
 <p align="center">
@@ -80,19 +80,44 @@ python backend/run.py
 
 ```
 ## License
-[Your chosen license]
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+# Additional Resources
 
-## Learn More
+Here are some helpful tools, libraries, and documentation relevant to ForgeFoil:
 
-To learn more about Next.js, take a look at the following resources:
+## 🔧 Development Tools
+- **Next.js Documentation**  
+  https://nextjs.org/docs
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **React Docs**  
+  https://reactjs.org/docs/
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Tailwind CSS**  
+  https://tailwindcss.com/docs
 
-## Deploy on Vercel
+- **TypeScript Docs**  
+  https://www.typescriptlang.org/docs/
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **FastAPI**  
+  https://fastapi.tiangolo.com/
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Python Virtual Environments**  
+  https://docs.python.org/3/tutorial/venv.html
+
+## 📈 Visualization & Data
+- **SVG Basics (MDN)**  
+  https://developer.mozilla.org/en-US/docs/Web/SVG
+
+- **D3.js (if used)**  
+  https://d3js.org/
+
+## 🛠 Utilities
+- **Shields.io (Badges)**  
+  https://shields.io/
+
+- **Vercel Deployment**  
+  https://vercel.com/docs
+
+---
+
+Let us know if there are other tools you'd recommend including!
